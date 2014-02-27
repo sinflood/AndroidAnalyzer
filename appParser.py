@@ -35,9 +35,9 @@ def processJavaFile(filename, appID, dictionary, max_len, c):
                 val = valspl[1].strip().strip(';').strip('"')
                 #check if key
                 if not '.' in val and not '_' in val and not ' ' in val and len(val) > 10 and(valspl[1].strip().startswith('"') or valspl[1].strip().startswith("'")):
-                    #if findWords(val, dictionary, max_len, MIN) ==0: 
-                    #if calcEntropy(valspl[1].strip().strip('"'), range_printable) > 2.5:
-                    backend.saveKey(appID, filename, varname, val, c)
+                    if findWords(val, dictionary, max_len, MIN) ==0: 
+                        #if calcEntropy(valspl[1].strip().strip('"'), range_printable) > 2.5:
+                        backend.saveKey(appID, filename, varname, val, c)
         if doHTTPAnalysis:
             if 'httpget' in toks or 'httpurlconnection' in toks:
                 backend.saveHTTP(appID, filename, line, c)
