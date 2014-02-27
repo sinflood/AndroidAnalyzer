@@ -1,6 +1,7 @@
 import argparse, os
-import math, string, sys, fileinput, sqlite3
+import math, string, sys, fileinput
 from random import choice
+import backend
 
 doKeyAnalysis = True
 doHTTPAnalysis = False
@@ -8,17 +9,18 @@ doHTTPAnalysis = False
 '''
 Iterate files in application's directory and analyze each file
 '''
-def processApp(path, appID, dictionary, max_len):
+def processApp(path, dictionary, max_len, c):
+    appID = backend.saveApp('something', path, c) #TODO: fix package name
     #for each file in directory(recursive)
     for root, dirs, files in os.walk(path):
         for f in files:
             if f.endswith('.java'):
-                processJavaFile(os.path.join(root, f), appID, dictionary, max_len)
+                processJavaFile(os.path.join(root, f), appID, dictionary, max_len, c)
                 
 '''                
 Pull out features from a single Java file and save to database.
 '''
-def processJavaFile(filename, appID, dictionary, max_len):
+def processJavaFile(filename, appID, dictionary, max_len, c):
     f = open(filename, 'r')
     for line in f:
         toks = line.lower().strip().split()
@@ -33,55 +35,16 @@ def processJavaFile(filename, appID, dictionary, max_len):
                 val = valspl[1].strip().strip(';').strip('"')
                 #check if key
                 if not '.' in val and not '_' in val and not ' ' in val and len(val) > 10 and(valspl[1].strip().startswith('"') or valspl[1].strip().startswith("'")):
-                    if findWords(val, dictionary, max_len, MIN) ==0: 
-                        #if H(valspl[1].strip().strip('"'), range_printable) > 2.5:
-                        saveKey(appID, filename, varname, val)
+                    #if findWords(val, dictionary, max_len, MIN) ==0: 
+                    #if calcEntropy(valspl[1].strip().strip('"'), range_printable) > 2.5:
+                    backend.saveKey(appID, filename, varname, val, c)
         if doHTTPAnalysis:
             if 'httpget' in toks or 'httpurlconnection' in toks:
-                saveHTTP(appID, filename, line)
+                backend.saveHTTP(appID, filename, line, c)
                 
-'''
-Just prints the data to stdout. Eventually want to write data to database.
-'''
-def saveKey(appID, filename, keyID, value):
-    print keyID
-    print value
-    print calcEntropy(value, range_printable)
 
-'''
-Just prints the LoC to stdout. Eventually want to write data to database.
-'''
-def saveHTTP(appID, filename, urlstr):
-    print urlstr.strip()
 
-'''
-Create SQLite database from schema
-'''
-def createDB(cursor):
-    cursor.execute('''
-	CREATE TABLE IF NOT EXISTS app (
-		id INTEGER PRIMARY KEY UNIQUE,
-		package TEXT,
-		appname TEXT
-	);
-	''')
-    cursor.execute('''
-	CREATE TABLE IF NOT EXISTS keys (
-		id INTEGER PRIMARY KEY UNIQUE,
-		appID INTEGER,
-		varName TEXT,
-		value TEXT,
-		filename TEXT,
-		FOREIGN KEY(appID) REFERENCES app(id)
-	);
-	''')
-    cursor.execute('''
-	CREATE TABLE IF NOT EXISTS http (
-		id INTEGER PRIMARY KEY UNIQUE,
-		type TEXT,
-		filename TEXT
-	);
-	''')
+
 
 #for shannon entropy http://pythonfiddle.com/shannon-entropy-calculation/
 def range_bytes (): return range(256)
@@ -124,11 +87,9 @@ parser.add_argument("-o", "--outputDB", type=str,default='./results.sqlite',  he
 parser.add_argument("-w", "--wordlist", type=str,default='./words.txt',  help="The wordlist for finding words in a string. ex. /usr/share/dict/words")
 args = parser.parse_args()
 
-#get SQLite connection
-conn = sqlite3.connect(args.outputDB)
-c = conn.cursor()
+#get SQLite cursor
+c = backend.getDB(args.outputDB)
 
-createDB(c)
 
 dictionary = set(open(args.wordlist,'r').read().lower().split())
 max_len = max(map(len, dictionary)) #longest word in the set of words
@@ -137,5 +98,7 @@ MIN = 4
 #for each directory in the input directory
 for d in os.walk( os.path.join(args.directory,'.')).next()[1]:
     print "dir " + os.path.join(args.directory,d)
-    processApp(os.path.join(args.directory,d), d, dictionary, max_len)
+    processApp(os.path.join(args.directory,d), dictionary, max_len, c)
+
+backend.close()
 
