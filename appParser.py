@@ -39,8 +39,21 @@ def processJavaFile(filename, appID, dictionary, max_len, c):
                         #if calcEntropy(valspl[1].strip().strip('"'), range_printable) > 2.5:
                         backend.saveKey(appID, filename, varname, val, c)
         if doHTTPAnalysis:
-            if 'httpget' in toks or 'httpurlconnection' in toks:
-                backend.saveHTTP(appID, filename, line, c)
+            '''
+            Need point where actual URL is created.
+            1. httpget(url)
+            2. httppost(url)
+            3. Not sure how to do https version of 1 or 2. Ex.:
+                http://hc.apache.org/httpcomponents-client-ga/httpclient/examples/org/apache/http/examples/client/ClientCustomSSL.java
+                http://stackoverflow.com/questions/5485415/android-java-how-to-create-https-connection
+                http://stackoverflow.com/questions/16504527/android-https-post-how-to-do
+            3. http(s)urlconnection needs: URL url = new URL("http://www.android.com/");
+            4. new android http 3rd party libraries
+            '''
+            if 'httpget' in toks or 'httppost' in toks or'httpurlconnection' in toks:
+                backend.saveHTTP(appID, filename, 'http', line, c)
+            if 'httpsurlconnection' in toks:
+                backend.saveHTTP(appID, filename, 'https', line, c)
                 
 
 

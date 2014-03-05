@@ -66,13 +66,13 @@ def saveKey(appID, filename, keyID, value, cursor):
 '''
 Saves http data to the SQLite database
 '''
-def saveHTTP(appID, filename, urlstr, cursor):
+def saveHTTP(appID, filename, connType, urlstr, cursor):
     if debug:
         print urlstr.strip()
     else:
         cursor.execute("INSERT INTO http VALUES (?, ?, ?, ?, ?)",
         [None,  # let sqlite3 pick an ID for us
-        appID, 'http', filename, urlstr])
+        appID, connType, filename, urlstr])
 '''
 Saves app information to the SQLite database.
 Returns the database ID.
