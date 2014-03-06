@@ -25,7 +25,7 @@ def processJavaFile(filename, appID, dictionary, max_len, c):
     for line in f:
         toks = line.lower().strip().split()
         if doKeyAnalysis:
-            if 'static' in toks and 'final' in toks and 'string' in toks and '=' in toks and not 'tag' in toks:
+            if ('static' in toks or 'final' in toks) and 'string' in toks and '=' in toks and not 'tag' in toks:
                 #This is a static final string.
                 #split the variable declaration from it's value
                 valspl = line.lower().strip().split('=')
