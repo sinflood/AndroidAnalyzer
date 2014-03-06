@@ -34,10 +34,12 @@ def processJavaFile(filename, appID, dictionary, max_len, c):
                 #clean up the value data
                 val = valspl[1].strip().strip(';').strip('"')
                 #check if key
-                if not '.' in val and not '_' in val and not ' ' in val and len(val) > 10 and(valspl[1].strip().startswith('"') or valspl[1].strip().startswith("'")):
-                    if findWords(val, dictionary, max_len, MIN) ==0: 
-                        #if calcEntropy(valspl[1].strip().strip('"'), range_printable) > 2.5:
-                        backend.saveKey(appID, filename, varname, val, c)
+                if not '.' in val and not '_' in val and not ' ' in val:
+                    if len(val) > 10 and(valspl[1].strip().startswith('"') or valspl[1].strip().startswith("'")):
+                        if findWords(val, dictionary, max_len, MIN) ==0:
+                            #print "FOUND KEY!!!!\n" + line
+                            #if calcEntropy(valspl[1].strip().strip('"'), range_printable) > 2.5:
+                            backend.saveKey(appID, filename, varname, val, c)
         if doHTTPAnalysis:
             '''
             Need point where actual URL is created.
@@ -78,9 +80,9 @@ Returns the number of words present in a string given a wordlist.
 http://stackoverflow.com/questions/19338113/how-to-find-possible-english-words-in-long-random-string
 '''
 def findWords(text, dictionary, max_len, minLength):
-    text = ''.join([choice(string.ascii_lowercase) for i in xrange(28000)])
-    text += '-'+text[::-1] #append the reverse of the text to itself
-
+    #text = ''.join([choice(string.ascii_lowercase) for i in xrange(28000)])
+    #text += '-'+text[::-1] #append the reverse of the text to itself
+    
     words_found = set() #set of words found, starts empty
     for i in xrange(len(text)): #for each possible starting position in the corpus
         chunk = text[i:i+max_len+1] #chunk that is the size of the longest word
@@ -89,7 +91,6 @@ def findWords(text, dictionary, max_len, minLength):
             if len(word) > minLength and word in dictionary: #constant time hash lookup if it's in dictionary
                 words_found.add(word) #add to set of words
                 return len(words_found)
-
     return len(words_found)
 
 #Script starts here.
