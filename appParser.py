@@ -22,8 +22,6 @@ def processApp(path, dictionary, max_len, c):
                     shortFileNames += 1
                 else:
                     longFileNames += 1
-    print shortFileNames
-    print longFileNames
     backend.saveFileNameLengths(appID, c, shortFileNames, longFileNames)
                 
 '''                
