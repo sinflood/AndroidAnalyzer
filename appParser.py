@@ -10,12 +10,21 @@ doHTTPAnalysis = False
 Iterate files in application's directory and analyze each file
 '''
 def processApp(path, dictionary, max_len, c):
-    appID = backend.saveApp('something', path, c) #TODO: fix package name
+    appID = backend.saveApp('something', path, c, 0, 0) #TODO: fix package name
+    shortFileNames = 0
+    longFileNames = 0
     #for each file in directory(recursive)
     for root, dirs, files in os.walk(path):
         for f in files:
             if f.endswith('.java'):
                 processJavaFile(os.path.join(root, f), appID, dictionary, max_len, c)
+                if len(f.split('.')[0]) == 1:
+                    shortFileNames += 1
+                else:
+                    longFileNames += 1
+    print shortFileNames
+    print longFileNames
+    backend.saveFileNameLengths(appID, c, shortFileNames, longFileNames)
                 
 '''                
 Pull out features from a single Java file and save to database.

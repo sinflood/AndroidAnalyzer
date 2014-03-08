@@ -26,7 +26,9 @@ def createDB(cursor):
 	CREATE TABLE IF NOT EXISTS app (
 		id INTEGER PRIMARY KEY UNIQUE,
 		package TEXT,
-		appname TEXT
+		appname TEXT,
+        shortFileNames INTEGER,
+        longFileNames INTEGER
 	);
 	''')
     cursor.execute('''
@@ -77,14 +79,23 @@ def saveHTTP(appID, filename, connType, urlstr, cursor):
 Saves app information to the SQLite database.
 Returns the database ID.
 '''
-def saveApp(package, appName, cursor):
-    cursor.execute("INSERT INTO app VALUES (?, ?, ?)",
+def saveApp(package, appName, cursor, shortFileNames, longFileNames):
+    cursor.execute("INSERT INTO app VALUES (?, ?, ?, ?, ?)",
         [None,  # let sqlite3 pick an ID for us
-        package, appName])
+        package, appName, shortFileNames, longFileNames])
     if cursor.lastrowid != None:
             return cursor.lastrowid
     else:
             return -1
+
+'''
+Updates app information with filename length counts
+'''
+def saveFileNameLengths(appID, cursor, shortFileNames, longFileNames):
+    cursor.execute('''UPDATE app 
+        SET shortFileNames = ?, longFileNames = ? 
+        WHERE id = ?''',
+        [shortFileNames, longFileNames, appID])
 
 '''
 Cleans up and commits any dirty database data.
