@@ -1,4 +1,4 @@
-import sqlite3
+import mysql.connector
 
 #Set this to true to send debug data to std out rather than db.
 debug = False
@@ -7,51 +7,55 @@ debug = False
 conn = None
 
 '''
-Creats a SQLite db and tables.
+Creats a MySQL db and tables.
 Returns the cursor for the db.
 '''
 def getDB(path):
-   #get SQLite connection
+   #get MySQL connection
     global conn
-    conn = sqlite3.connect(path)
+    #User and password for MySQL
+    conn = mysql.connector.connect(user='root', password='', database='apps')
     c = conn.cursor()
 
     createDB(c)
     return c
 '''
-Create SQLite database from schema
+Create MySQL database from schema
 '''
 def createDB(cursor):
     cursor.execute('''
-	CREATE TABLE IF NOT EXISTS app (
-		id INTEGER PRIMARY KEY UNIQUE,
-		package TEXT,
-		appname TEXT
-	);
+	CREATE TABLE IF NOT EXISTS `app` (
+	`id` INT(11) NOT NULL AUTO_INCREMENT,
+	`package` TEXT NULL,
+	`appname` TEXT NULL,
+	PRIMARY KEY (`id`)
+    );
 	''')
     cursor.execute('''
-	CREATE TABLE IF NOT EXISTS keys (
-		id INTEGER PRIMARY KEY UNIQUE,
-		appID INTEGER,
-		varName TEXT,
-		value TEXT,
-		filename TEXT,
-		FOREIGN KEY(appID) REFERENCES app(id)
-	);
+    CREATE TABLE IF NOT EXISTS `keys` (
+	`id` INT(11) NOT NULL AUTO_INCREMENT,
+	`appID` INT(11) NOT NULL,
+	`varName` TEXT NULL,
+	`value` TEXT NULL,
+	`filename` TEXT NULL,
+	PRIMARY KEY (`id`),
+	CONSTRAINT `FK__keys__app` FOREIGN KEY (`appID`) REFERENCES `app` (`id`)
+    );
 	''')
     cursor.execute('''
-	CREATE TABLE IF NOT EXISTS http (
-		id INTEGER PRIMARY KEY UNIQUE,
-		appID INTEGER,
-		type TEXT,
-		filename TEXT,
-		value TEXT,
-                FOREIGN KEY(appID) REFERENCES app(id)
+	CREATE TABLE IF NOT EXISTS `http` (
+		`id` INT(11) NOT NULL AUTO_INCREMENT,
+		`appID` INT(11) NOT NULL,
+		`type` TEXT NULL,
+		`filename` TEXT NULL,
+		`value` TEXT NULL,
+        PRIMARY KEY (`id`),
+        CONSTRAINT `FK__http__app` FOREIGN KEY (`appID`) REFERENCES `app` (`id`)
 	);
 	''')
 
 '''
-Saves key data to the SQLite database
+Saves hey data to the MySQL database
 '''
 def saveKey(appID, filename, keyID, value, cursor):
     if debug:
@@ -59,28 +63,22 @@ def saveKey(appID, filename, keyID, value, cursor):
         print value
         #print calcEntropy(value, range_printable)
     else:
-        cursor.execute("INSERT INTO keys VALUES (?, ?, ?, ?, ?)",
-            [None,  # let sqlite3 pick an ID for us
-            appID, keyID, value, filename])
+        cursor.execute("INSERT INTO apps.keys(appID, varName, value, filename) VALUES (%s, %s, %s, %s)", [appID, keyID, value, filename])
 
 '''
-Saves http data to the SQLite database
+Saves http data to the MySQL database
 '''
-def saveHTTP(appID, filename, connType, urlstr, cursor):
+def saveHTTP(appID, filename, conntype, urlstr, cursor):
     if debug:
         print urlstr.strip()
     else:
-        cursor.execute("INSERT INTO http VALUES (?, ?, ?, ?, ?)",
-        [None,  # let sqlite3 pick an ID for us
-        appID, connType, filename, urlstr])
+        cursor.execute("INSERT INTO apps.http(appID, type, filename, value) VALUES (%s, %s, %s, %s)", [appID, conntype, filename, urlstr])
 '''
-Saves app information to the SQLite database.
+Saves app information to the MySQL database.
 Returns the database ID.
 '''
 def saveApp(package, appName, cursor):
-    cursor.execute("INSERT INTO app VALUES (?, ?, ?)",
-        [None,  # let sqlite3 pick an ID for us
-        package, appName])
+    cursor.execute("INSERT INTO apps.app(package, appname) VALUES (%s, %s)", [package, appName])
     if cursor.lastrowid != None:
             return cursor.lastrowid
     else:
