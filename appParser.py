@@ -1,10 +1,12 @@
 import argparse, os
 import math, string, sys, fileinput
+import re
 from random import choice
 import backend
 
 doKeyAnalysis = True
-doHTTPAnalysis = False
+doHTTPAnalysis = True
+doLibraryImports = True
 
 '''
 Iterate files in application's directory and analyze each file
@@ -56,11 +58,21 @@ def processJavaFile(filename, appID, dictionary, max_len, c):
                 backend.saveHTTP(appID, filename, 'http', line, c)
             if 'httpsurlconnection' in toks:
                 backend.saveHTTP(appID, filename, 'https', line, c)
-                
+        
+        if doLibraryImports:
+            if len(toks) >= 2:
+                if toks[0] == 'import':
+                    library = toks[1]
+                    if interestingLibrary(library):
+                        backend.saveLibrary(appID, filename, library, c)
 
-
-
-
+                    
+def interestingLibrary(library):
+    if re.search(r'\.amazon\.', library):
+        print library," is interesting"
+        return True
+    return False
+                    
 #for shannon entropy http://pythonfiddle.com/shannon-entropy-calculation/
 def range_bytes (): return range(256)
 def range_printable(): return (ord(c) for c in string.printable)
@@ -96,7 +108,7 @@ def findWords(text, dictionary, max_len, minLength):
 #Script starts here.
 #parse input arguments
 parser = argparse.ArgumentParser()
-parser.add_argument("-d", "--directory", type=str,default='.',  help="The directory with the source code folders")
+parser.add_argument("-d", "--directory", type=str,default='./decompiled',  help="The directory with the source code folders")
 parser.add_argument("-o", "--outputDB", type=str,default='./results.sqlite',  help="The output database where features will be written to.")
 parser.add_argument("-w", "--wordlist", type=str,default='./words.txt',  help="The wordlist for finding words in a string. ex. /usr/share/dict/words")
 args = parser.parse_args()

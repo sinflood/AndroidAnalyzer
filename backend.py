@@ -14,7 +14,7 @@ def getDB(path):
    #get MySQL connection
     global conn
     #User and password for MySQL
-    conn = mysql.connector.connect(user='root', password='', database='apps')
+    conn = mysql.connector.connect(user='root', password='')
     c = conn.cursor()
 
     createDB(c)
@@ -23,6 +23,12 @@ def getDB(path):
 Create MySQL database from schema
 '''
 def createDB(cursor):
+    cursor.execute('''
+    CREATE DATABASE IF NOT EXISTS `apps`;
+    ''')
+    cursor.execute('''
+    USE `apps`;
+    ''')
     cursor.execute('''
 	CREATE TABLE IF NOT EXISTS `app` (
 	`id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -53,9 +59,19 @@ def createDB(cursor):
         CONSTRAINT `FK__http__app` FOREIGN KEY (`appID`) REFERENCES `app` (`id`)
 	);
 	''')
+    cursor.execute('''
+	CREATE TABLE IF NOT EXISTS `libraries` (
+		`id` INT(11) NOT NULL AUTO_INCREMENT,
+		`appID` INT(11) NOT NULL,
+		`filename` TEXT NULL,
+		`library` TEXT NULL,
+        PRIMARY KEY (`id`),
+        CONSTRAINT `FK__libraries__app` FOREIGN KEY (`appID`) REFERENCES `app` (`id`)
+	);
+	''')
 
 '''
-Saves hey data to the MySQL database
+Saves key data to the MySQL database
 '''
 def saveKey(appID, filename, keyID, value, cursor):
     if debug:
@@ -84,6 +100,15 @@ def saveApp(package, appName, cursor):
     else:
             return -1
 
+            
+'''
+Saves library import to the database
+'''
+def saveLibrary(appID, filename, library, cursor):
+    if debug:
+        print library
+    cursor.execute("INSERT INTO apps.libraries(appID, filename, library) VALUES(%s, %s, %s)", [appID, filename, library] )
+            
 '''
 Cleans up and commits any dirty database data.
 '''
