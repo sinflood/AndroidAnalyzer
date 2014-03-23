@@ -24,11 +24,6 @@ Getting Started
 
 ```
 /Volumes/Macintosh HDD/Columbia Security/AndroidAnalyzer [git::master *] [chrisdangelo@macmini] [15:29]
-> mysql.server stop;
-Shutting down MySQL
-.. SUCCESS! 
-
-/Volumes/Macintosh HDD/Columbia Security/AndroidAnalyzer [git::master *] [chrisdangelo@macmini] [15:29]
 > mysql.server start
 Starting MySQL
 . SUCCESS! 
