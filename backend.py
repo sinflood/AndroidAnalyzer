@@ -34,6 +34,8 @@ def createDB(cursor):
 	`id` INT(11) NOT NULL AUTO_INCREMENT,
 	`package` TEXT NULL,
 	`appname` TEXT NULL,
+    `shortFileNames` INT(11) NULL,
+    `longFileNames` INT(11)NULL,
 	PRIMARY KEY (`id`)
     );
 	''')
@@ -93,12 +95,18 @@ def saveHTTP(appID, filename, conntype, urlstr, cursor):
 Saves app information to the MySQL database.
 Returns the database ID.
 '''
-def saveApp(package, appName, cursor):
-    cursor.execute("INSERT INTO apps.app(package, appname) VALUES (%s, %s)", [package, appName])
+def saveApp(package, appName, cursor, shortFileNames, longFileNames):
+    cursor.execute("INSERT INTO apps.app(package, appname, shortFileNames, longFileNames) VALUES (%s, %s, %s, %s)", [package, appName, shortFileNames, longFileNames])
     if cursor.lastrowid != None:
             return cursor.lastrowid
     else:
             return -1
+
+'''
+Updates app information with filename length counts
+'''
+def saveFileNameLengths(appID, cursor, shortFileNames, longFileNames):
+    cursor.execute("UPDATE apps.app SET shortFileNames = %s, longFileNames = %s WHERE id = %s", [shortFileNames, longFileNames, appID])
 
             
 '''
