@@ -1,5 +1,5 @@
 import argparse, os
-import math, string, sys, fileinput
+import math, string, sys, fileinput, traceback
 import re
 from random import choice
 import backend
@@ -26,53 +26,70 @@ def processApp(path, dictionary, max_len, c):
                     longFileNames += 1
     backend.saveFileNameLengths(appID, c, shortFileNames, longFileNames)
 
+def handleHttpGet(httpID, toks, line, cursor):
+    pieces = line.split('=')
+    #print line.strip()
+    if len(pieces) > 1:
+        end = '='.join(pieces[1:]).strip()
+        if end.startswith('new'):
+            params = '('.join(end.split('(')[1:]).strip()[:-2]
+            paramType = 'var'
+            if params.startswith('"'):
+               paramType = 'const'
+            #print params
+            backend.saveHTTPParam(httpID, 0, paramType, params, cursor)
+   
 '''                
 Pull out features from a single Java file and save to database.
 '''
 def processJavaFile(filename, appID, dictionary, max_len, c):
-    f = open(filename, 'r')
-    for line in f:
-        toks = line.lower().strip().split()
-        if doKeyAnalysis:
-            if ('static' in toks or 'final' in toks) and 'string' in toks and '=' in toks and not 'tag' in toks:
-                #This is a static final string.
-                #split the variable declaration from it's value
-                valspl = line.lower().strip().split('=')
-                #get the name of the variable
-                varname = valspl[0].split()[-1] #[-1] is last item in list
-                #clean up the value data
-                val = valspl[1].strip().strip(';').strip('"')
-                #check if key
-                if not '.' in val and not '_' in val and not ' ' in val:
-                    if len(val) > 10 and(valspl[1].strip().startswith('"') or valspl[1].strip().startswith("'")):
-                        if findWords(val, dictionary, max_len, MIN) ==0:
-                            #print "FOUND KEY!!!!\n" + line
-                            #if calcEntropy(valspl[1].strip().strip('"'), range_printable) > 2.5:
-                            backend.saveKey(appID, filename, varname, val, c)
-        if doHTTPAnalysis:
-            '''
-            Need point where actual URL is created.
-            1. httpget(url)
-            2. httppost(url)
-            3. Not sure how to do https version of 1 or 2. Ex.:
-                http://hc.apache.org/httpcomponents-client-ga/httpclient/examples/org/apache/http/examples/client/ClientCustomSSL.java
-                http://stackoverflow.com/questions/5485415/android-java-how-to-create-https-connection
-                http://stackoverflow.com/questions/16504527/android-https-post-how-to-do
-            3. http(s)urlconnection needs: URL url = new URL("http://www.android.com/");
-            4. new android http 3rd party libraries
-            '''
-            if 'httpget' in toks or 'httppost' in toks or'httpurlconnection' in toks:
-                backend.saveHTTP(appID, filename, 'http', line, c)
-            if 'httpsurlconnection' in toks:
-                backend.saveHTTP(appID, filename, 'https', line, c)
-        
-        if doLibraryImports:
-            if len(toks) >= 2:
-                if toks[0] == 'import':
-                    library = toks[1]
-                    if interestingLibrary(library):
-                        backend.saveLibrary(appID, filename, library, c)
-
+    try:
+        f = open(filename, 'r')
+        for line in f:
+            toks = line.lower().strip().split()
+            if doKeyAnalysis:
+                if ('static' in toks or 'final' in toks) and 'string' in toks and '=' in toks and not 'tag' in toks:
+                    #This is a static final string.
+                    #split the variable declaration from it's value
+                    valspl = line.lower().strip().split('=')
+                    #get the name of the variable
+                    varname = valspl[0].split()[-1] #[-1] is last item in list
+                    #clean up the value data
+                    val = valspl[1].strip().strip(';').strip('"')
+                    #check if key
+                    if not '.' in val and not '_' in val and not ' ' in val and not val.startswith('abcdef') and not val.startswith('0123456') and not val.startswith('x-ebay') and not val.startswith('()<>')and not val.startswith('yyyy'):
+                        if len(val) > 14 and(valspl[1].strip().startswith('"') or valspl[1].strip().startswith("'")):
+                            if findWords(val, dictionary, max_len, MIN) ==0:
+                                #print "FOUND KEY!!!!\n" + line
+                                #if calcEntropy(valspl[1].strip().strip('"'), range_printable) > 2.5:
+                                backend.saveKey(appID, filename, varname, val, c)
+            if doHTTPAnalysis:
+                '''
+                Need point where actual URL is created.
+                1. httpget(url)
+                2. httppost(url)
+                3. Not sure how to do https version of 1 or 2. Ex.:
+                    http://hc.apache.org/httpcomponents-client-ga/httpclient/examples/org/apache/http/examples/client/ClientCustomSSL.java
+                    http://stackoverflow.com/questions/5485415/android-java-how-to-create-https-connection
+                    http://stackoverflow.com/questions/16504527/android-https-post-how-to-do
+                3. http(s)urlconnection needs: URL url = new URL("http://www.android.com/");
+                4. new android http 3rd party libraries
+                '''
+                if 'httpget' in toks or 'httppost' in toks or'httpurlconnection' in toks:
+                    httpID = backend.saveHTTP(appID, filename, 'http', line, c)
+                    if 'httpget' in toks or 'httppost' in toks:
+                            handleHttpGet(httpID, toks, line, c)
+                if 'httpsurlconnection' in toks:
+                    backend.saveHTTP(appID, filename, 'https', line, c)
+            
+            if doLibraryImports:
+                if len(toks) >= 2:
+                    if toks[0] == 'import':
+                        library = toks[1]
+                        if interestingLibrary(library):
+                            backend.saveLibrary(appID, filename, library, c)
+    except:
+        traceback.print_exc(file=sys.stdout)
                     
 def interestingLibrary(library):
     if re.search(r'\.amazon\.', library):

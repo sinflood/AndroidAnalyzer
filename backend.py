@@ -62,6 +62,17 @@ def createDB(cursor):
 	);
 	''')
     cursor.execute('''
+	CREATE TABLE IF NOT EXISTS `httpParams` (
+		`id` INT(11) NOT NULL AUTO_INCREMENT,
+		`httpID` INT(11) NOT NULL,
+		`orderNum` INT(11),
+		`type` TEXT NULL,
+		`value` TEXT NULL,
+        PRIMARY KEY (`id`),
+        CONSTRAINT `FK__httpParams__http` FOREIGN KEY (`httpID`) REFERENCES `http` (`id`)
+	);
+	''')
+    cursor.execute('''
 	CREATE TABLE IF NOT EXISTS `libraries` (
 		`id` INT(11) NOT NULL AUTO_INCREMENT,
 		`appID` INT(11) NOT NULL,
@@ -91,6 +102,15 @@ def saveHTTP(appID, filename, conntype, urlstr, cursor):
         print urlstr.strip()
     else:
         cursor.execute("INSERT INTO apps.http(appID, type, filename, value) VALUES (%s, %s, %s, %s)", [appID, conntype, filename, urlstr])
+        return cursor.lastrowid
+
+def saveHTTPParam(httpID, order, paramType, value, cursor):
+    if debug:
+        print httpID
+        print value
+    else:
+        cursor.execute("INSERT INTO apps.httpParams(httpID, orderNum, type, value) VALUES (%s, %s, %s, %s)", [httpID, order, paramType, value])
+  
 '''
 Saves app information to the MySQL database.
 Returns the database ID.
