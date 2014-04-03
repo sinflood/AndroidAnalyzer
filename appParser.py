@@ -6,6 +6,7 @@ import backend
 
 doKeyAnalysis = True
 doHTTPAnalysis = True
+doTwitterAnalysis = True
 doLibraryImports = True
 
 '''
@@ -38,7 +39,20 @@ def handleHttpGet(httpID, toks, line, cursor):
                paramType = 'const'
             #print params
             backend.saveHTTPParam(httpID, 0, paramType, params, cursor)
-   
+
+def handleTwitter(appID, filename, toks, line, cursor):
+    print line.strip()
+    params = '('.join(end.split('(')[1:]).strip()[:-2]
+    paramList = params.split(',')
+    if len(paramList) >=2:
+        keyval = paramList[1]
+        if keyval.startswith('"'):
+            backend.saveKey(appID, filename, None, 'Twitter', keyval, c)
+        else: #we have a variable. Check to see if we have seen it before.
+            res = backend.getKey(keyval, appID, c)
+            if res != -1:
+                backend.updateKeyType(res, 'Twitter')
+
 '''                
 Pull out features from a single Java file and save to database.
 '''
@@ -62,10 +76,9 @@ def processJavaFile(filename, appID, dictionary, max_len, c):
                             if findWords(val, dictionary, max_len, MIN) ==0:
                                 #print "FOUND KEY!!!!\n" + line
                                 #if calcEntropy(valspl[1].strip().strip('"'), range_printable) > 2.5:
-                                backend.saveKey(appID, filename, varname, val, c)
+                                backend.saveKey(appID, filename, varname, None, val, c)
             if doHTTPAnalysis:
                 '''
-                Need point where actual URL is created.
                 1. httpget(url)
                 2. httppost(url)
                 3. Not sure how to do https version of 1 or 2. Ex.:
@@ -81,6 +94,16 @@ def processJavaFile(filename, appID, dictionary, max_len, c):
                             handleHttpGet(httpID, toks, line, c)
                 if 'httpsurlconnection' in toks:
                     backend.saveHTTP(appID, filename, 'https', line, c)
+            if doTwitterAnalysis:
+                if 'setOAuthConsumer' in toks:
+                    #get second param of call
+                    #if constant, then add to keys
+                    #if var, try to lookup in keys
+                        #if found, update keys with type twitter
+                    #if not found, create new key entry with just var name and type (no value)
+                    print 'found twitter!'
+                    handleTwitter(appID, filename, toks, line, c)
+                
             
             if doLibraryImports:
                 if len(toks) >= 2:

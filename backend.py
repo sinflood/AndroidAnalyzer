@@ -45,6 +45,7 @@ def createDB(cursor):
 	`appID` INT(11) NOT NULL,
 	`varName` TEXT NULL,
 	`value` TEXT NULL,
+	`keytype` TEXT NULL,
 	`filename` TEXT NULL,
 	PRIMARY KEY (`id`),
 	CONSTRAINT `FK__keys__app` FOREIGN KEY (`appID`) REFERENCES `app` (`id`)
@@ -86,14 +87,31 @@ def createDB(cursor):
 '''
 Saves key data to the MySQL database
 '''
-def saveKey(appID, filename, keyID, value, cursor):
+def saveKey(appID, filename, keyID, keytype, value, cursor):
     if debug:
         print keyID
         print value
         #print calcEntropy(value, range_printable)
     else:
-        cursor.execute("INSERT INTO apps.keys(appID, varName, value, filename) VALUES (%s, %s, %s, %s)", [appID, keyID, value, filename])
+        cursor.execute("INSERT INTO apps.keys(appID, varName, value, keytype, filename) VALUES (%s, %s, %s, %s, %s)", [appID, keyID, value, keytype, filename])
 
+def getKey(variable, appID, cursor):
+    if debug:
+        print variable
+        print appID
+    else:
+        cursor.execute("select id from apps.keys where appID = " + appID + " and varName = '" + variable + "'")
+        res = cursor.fetchone()
+        if res != None:
+            return res[0]
+
+def updateKeyType(keyID, keytype, cursor):
+    if debug:
+        print keyID
+        print keytype
+    else:
+        cursor.execute("update apps.keys set keytype= '" + keytype + "' where id = " + keyID)
+        
 '''
 Saves http data to the MySQL database
 '''
