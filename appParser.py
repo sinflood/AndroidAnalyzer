@@ -9,18 +9,46 @@ doHTTPAnalysis = True
 doTwitterAnalysis = True
 doLibraryImports = True
 
+saveProgressToLog = True
+resumeProgressFromLog = False
+logFile = 'progress.log'
+
+#NOT config parameters. Don't change
+resumeFlag = False
+lastFileParsed = ''
+
+
 '''
 Iterate files in application's directory and analyze each file
 '''
 def processApp(path, dictionary, max_len, c):
+    global resumeFlag
+    global resumeProgressFromLog
+    global saveProgressToLog
+    
     appID = backend.saveApp('something', path, c, 0, 0) #TODO: fix package name
     #for each file in directory(recursive)
     shortFileNames = 0
     longFileNames = 0
     for root, dirs, files in os.walk(path):
-        for f in files:
+        for f in sorted(files):
             if f.endswith('.java'):
+                if(resumeProgressFromLog):
+                    if(not resumeFlag):
+                        if(lastFileParsed == os.path.join(root, f)):
+                            resumeFlag = True
+                            continue #We just reached the point where the last run exited
+                        else:
+                            continue #We haven't yet reaced the point where the last run exited
+                    #else do nothing (we had reached the point of resuming in some previous iteration
+                #else fo nothing (we are not resuming progress from log) 
+                           
                 processJavaFile(os.path.join(root, f), appID, dictionary, max_len, c)
+                print 'Processing', os.path.join(root, f)
+                if(saveProgressToLog):    
+                    lf = open(logFile, 'w')
+                    lf.write(os.path.join(root, f))
+                    lf.close()
                 if len(f.split('.')[0]) == 1:
                     shortFileNames += 1
                 else:
@@ -163,10 +191,20 @@ args = parser.parse_args()
 #get SQLite cursor
 c = backend.getDB(args.outputDB)
 
-
 dictionary = set(open(args.wordlist,'r').read().lower().split())
 max_len = max(map(len, dictionary)) #longest word in the set of words
 MIN = 4
+
+if(resumeProgressFromLog):
+    if(os.path.isfile(logFile)):
+        f = open(logFile, 'r')
+        lastFileParsed = f.readline()
+        f.close()
+        if(lastFileParsed == ''):
+            resumeFlag = True
+    else:
+        print 'Progress log not found. Restarting parsing from beginning'
+        resumeProgressFromLog = False
     
 #for each directory in the input directory
 for d in os.walk( os.path.join(args.directory,'.')).next()[1]:
