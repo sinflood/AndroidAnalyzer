@@ -11,10 +11,10 @@ Creats a MySQL db and tables.
 Returns the cursor for the db.
 '''
 def getDB(path):
-   #get MySQL connection
+   #get MySQL connectionsaveKe
     global conn
     #User and password for MySQL
-    conn = mysql.connector.connect(user='root', password='')
+    conn = mysql.connector.connect(user='root', password='craig')
     c = conn.cursor()
 
     createDB(c)
@@ -100,7 +100,7 @@ def getKey(variable, appID, cursor):
         print variable
         print appID
     else:
-        cursor.execute("select id from apps.keys where appID = " + appID + " and varName = '" + variable + "'")
+        cursor.execute("select id from apps.keys where appID = " + str(appID) + " and varName = '" + str(variable) + "'")
         res = cursor.fetchone()
         if res != None:
             return res[0]
@@ -110,7 +110,7 @@ def updateKeyType(keyID, keytype, cursor):
         print keyID
         print keytype
     else:
-        cursor.execute("update apps.keys set keytype= '" + keytype + "' where id = " + keyID)
+        cursor.execute("update apps.keys set keytype= '" + keytype + "' where id = " + str(keyID))
         
 '''
 Saves http data to the MySQL database

@@ -7,9 +7,10 @@ import backend
 doKeyAnalysis = True
 doHTTPAnalysis = True
 doTwitterAnalysis = True
+doDropboxAnalysis = True
 doLibraryImports = True
 
-saveProgressToLog = True
+saveProgressToLog = False
 resumeProgressFromLog = False
 logFile = 'progress.log'
 
@@ -44,7 +45,7 @@ def processApp(path, dictionary, max_len, c):
                 #else fo nothing (we are not resuming progress from log) 
                            
                 processJavaFile(os.path.join(root, f), appID, dictionary, max_len, c)
-                print 'Processing', os.path.join(root, f)
+                #print 'Processing', os.path.join(root, f)
                 if(saveProgressToLog):    
                     lf = open(logFile, 'w')
                     lf.write(os.path.join(root, f))
@@ -69,42 +70,107 @@ def handleHttpGet(httpID, toks, line, cursor):
             backend.saveHTTPParam(httpID, 0, paramType, params, cursor)
 
 def handleTwitter(appID, filename, toks, line, cursor):
-    print line.strip()
-    params = '('.join(end.split('(')[1:]).strip()[:-2]
+    #print line.strip()
+    params = '('.join(line.split('(')[1:]).strip()[:-2]
+    paramList = params.split(',')
+    
+    if 'setOAuthConsumer(' in line and len(paramList) >=2:
+        keyval = paramList[1]
+        if keyval.strip().startswith('"'):
+            backend.saveKey(appID, filename, None, 'Twitter', keyval, c)
+        else: #we have a variable. Check to see if we have seen it before.
+            if not 'String ' in keyval: #make sure this isn't a method declaration
+                #print "Keyval: " + keyval
+                endpiece = keyval.split('.')[-1]
+                res = backend.getKey(endpiece, appID, c)
+                if res != -1 and res != None:
+                    print "Success twitter: " + str(res)
+                    backend.updateKeyType(res, 'Twitter', cursor)
+                '''
+                else:
+                    print "failed twitter: "
+                '''
+    if 'setOAuthConsumerSecret' in line and len(paramList)>= 1:
+        keyval = paramList[0]
+        if keyval.strip().startswith('"'):
+            backend.saveKey(appID, filename, None, 'Twitter', keyval, c)
+        else: #we have a variable. Check to see if we have seen it before.
+            if not 'String ' in keyval: #make sure this isn't a method declaration
+                #print "Keyval: " + keyval
+                endpiece = keyval.split('.')[-1]
+                res = backend.getKey(endpiece, appID, c)
+                if res != -1 and res != None:
+                    print "Success twitter: " + str(res)
+                    backend.updateKeyType(res, 'Twitter', cursor)
+                '''
+                else:
+                    print "failed twitter: "
+                '''
+
+def handleDropbox(appID, filename, toks, line, cursor):
+    #print line.strip()
+    params = '('.join(line.split('(')[1:]).strip()[:-2]
     paramList = params.split(',')
     if len(paramList) >=2:
         keyval = paramList[1]
-        if keyval.startswith('"'):
-            backend.saveKey(appID, filename, None, 'Twitter', keyval, c)
+        if keyval.strip().startswith('"'):
+            #print "found key: " + keyval
+            keyval = keyval.strip().strip(')').strip('"')
+            backend.saveKey(appID, filename, None, 'Dropbox', keyval, c)
         else: #we have a variable. Check to see if we have seen it before.
-            res = backend.getKey(keyval, appID, c)
-            if res != -1:
-                backend.updateKeyType(res, 'Twitter')
+            if not 'String ' in keyval: #make sure this isn't a method declaration
+                #print "Keyval: " + keyval
+                endpiece = keyval.split('.')[-1]
+                res = backend.getKey(endpiece, appID, c)
+                if res != -1 and res != None:
+                    #print "Success Dropbox: " + str(res)
+                    backend.updateKeyType(res, 'Dropbox', cursor)
+                '''
+                else:
+                    print "failed twitter: "
+                '''
 
 '''                
 Pull out features from a single Java file and save to database.
 '''
 def processJavaFile(filename, appID, dictionary, max_len, c):
     try:
+        #print"Processing Java file " + filename
         f = open(filename, 'r')
+        facebookUse = False        
         for line in f:
+            if "com.facebook" in line:
+                facebookUse = True
+                #print "found facebook use"
             toks = line.lower().strip().split()
+            #print line.strip()
             if doKeyAnalysis:
                 if ('static' in toks or 'final' in toks) and 'string' in toks and '=' in toks and not 'tag' in toks:
                     #This is a static final string.
                     #split the variable declaration from it's value
+                   
                     valspl = line.lower().strip().split('=')
                     #get the name of the variable
                     varname = valspl[0].split()[-1] #[-1] is last item in list
                     #clean up the value data
                     val = valspl[1].strip().strip(';').strip('"')
+                    #print "found something: " + str(val)
                     #check if key
                     if not '.' in val and not '_' in val and not ' ' in val and not val.startswith('abcdef') and not val.startswith('0123456') and not val.startswith('x-ebay') and not val.startswith('()<>')and not val.startswith('yyyy'):
                         if len(val) > 14 and(valspl[1].strip().startswith('"') or valspl[1].strip().startswith("'")):
                             if findWords(val, dictionary, max_len, MIN) ==0:
                                 #print "FOUND KEY!!!!\n" + line
                                 #if calcEntropy(valspl[1].strip().strip('"'), range_printable) > 2.5:
-                                backend.saveKey(appID, filename, varname, None, val, c)
+                                keyType = None
+                                if facebookUse or varname == "fb_app_signature":
+                                    #print "found facebook key"
+                                    keyType = "Facebook"
+                                if varname == 'dropbox_app_secret':
+                                    #print "FOUND DROPBOX!"
+                                    keyType = "Dropbox"                     
+                                    
+                                #print "Creating new key: " + str(val)
+                                backend.saveKey(appID, filename, varname, keyType, val, c)
             if doHTTPAnalysis:
                 '''
                 1. httpget(url)
@@ -123,15 +189,23 @@ def processJavaFile(filename, appID, dictionary, max_len, c):
                 if 'httpsurlconnection' in toks:
                     backend.saveHTTP(appID, filename, 'https', line, c)
             if doTwitterAnalysis:
-                if 'setOAuthConsumer' in toks:
+                if 'setOAuthConsumer' in line:
                     #get second param of call
                     #if constant, then add to keys
                     #if var, try to lookup in keys
                         #if found, update keys with type twitter
                     #if not found, create new key entry with just var name and type (no value)
-                    print 'found twitter!'
+                    #print 'found twitter!'
                     handleTwitter(appID, filename, toks, line, c)
-                
+            if doDropboxAnalysis:
+                if "new AppKeyPair("  in line:
+                    #get second param of call
+                    #if constant, then add to keys
+                    #if var, try to lookup in keys
+                        #if found, update keys with type twitter
+                    #if not found, create new key entry with just var name and type (no value)
+                    #print 'found twitter!'
+                    handleDropbox(appID, filename, toks, line, c) 
             
             if doLibraryImports:
                 if len(toks) >= 2:
@@ -144,7 +218,7 @@ def processJavaFile(filename, appID, dictionary, max_len, c):
                     
 def interestingLibrary(library):
     if re.search(r'\.amazon\.', library):
-        print library," is interesting"
+        #print library," is interesting"
         return True
     return False
                     
@@ -213,3 +287,4 @@ for d in os.walk( os.path.join(args.directory,'.')).next()[1]:
 
 backend.close()
 
+print "done"
