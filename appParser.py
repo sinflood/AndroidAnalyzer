@@ -92,6 +92,12 @@ def handleTwitter(appID, filename, toks, line, cursor):
                     print "failed twitter: " + keyval
                     print line.strip()
                     print "----------------------------"
+                    lf = open("./missedLines.txt", 'a')
+                    lf.write("------------------------------------------------------------\n")
+                    lf.write("Missed Twitter call. App id: "+ str(appID) + " file: " + filename + "\n")
+                    lf.write(line.strip()+ "\n")
+                    lf.write("------------------------------------------------------------"+ "\n")
+                    lf.close()
                 
     if 'setOAuthConsumerSecret' in line and len(paramList)>= 1:
         keyval = paramList[0]
@@ -111,6 +117,12 @@ def handleTwitter(appID, filename, toks, line, cursor):
                     print "failed twitter: " + keyval
                     print line.strip()
                     print "----------------------------"
+                    lf = open("./missedLines.txt", 'a')
+                    lf.write("------------------------------------------------------------"+ "\n")
+                    lf.write("Missed Twitter call. App id: "+ str(appID) + " file: " + filename+ "\n")
+                    lf.write(line.strip()+ "\n")
+                    lf.write("------------------------------------------------------------"+ "\n")
+                    lf.close()
                 
 
 def handleDropbox(appID, filename, toks, line, cursor):
@@ -131,10 +143,23 @@ def handleDropbox(appID, filename, toks, line, cursor):
                 if res != -1 and res != None:
                     #print "Success Dropbox: " + str(res)
                     backend.updateKeyType(res, 'Dropbox', cursor)
-                '''
+                
                 else:
-                    print "failed twitter: "
-                '''
+                    print "failed Dropbox: "
+                    lf = open("./missedLines.txt", 'a')
+                    lf.write("------------------------------------------------------------"+ "\n")
+                    lf.write("Missed Dropbox call. App id: "+ str(appID) + " file: " + filename+ "\n")
+                    lf.write(line.strip()+ "\n")
+                    lf.write("------------------------------------------------------------"+ "\n")
+                    lf.close()
+    else:
+        print "failed Dropbox: "
+        lf = open("./missedLines.txt", 'a')
+        lf.write("------------------------------------------------------------"+ "\n")
+        lf.write("Missed Dropbox call. App id: "+ str(appID) + " file: " + filename+ "\n")
+        lf.write(line.strip()+ "\n")
+        lf.write("------------------------------------------------------------"+ "\n")
+        lf.close()
 
 '''                
 Pull out features from a single Java file and save to database.
@@ -288,7 +313,7 @@ if(resumeProgressFromLog):
     
 #for each directory in the input directory
 for d in os.walk( os.path.join(args.directory,'.')).next()[1]:
-    #print "dir " + os.path.join(args.directory,d)
+    print "dir " + os.path.join(args.directory,d)
     processApp(os.path.join(args.directory,d), dictionary, max_len, c)
 
 backend.close()
