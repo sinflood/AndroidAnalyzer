@@ -86,10 +86,13 @@ def handleTwitter(appID, filename, toks, line, cursor):
                 if res != -1 and res != None:
                     print "Success twitter: " + str(res)
                     backend.updateKeyType(res, 'Twitter', cursor)
-                '''
+                elif keyval.startswith('getString('):
+                    backend.saveKey(appID, filename, keyval, 'Twitter', None, c)
                 else:
-                    print "failed twitter: "
-                '''
+                    print "failed twitter: " + keyval
+                    print line.strip()
+                    print "----------------------------"
+                
     if 'setOAuthConsumerSecret' in line and len(paramList)>= 1:
         keyval = paramList[0]
         if keyval.strip().startswith('"'):
@@ -102,10 +105,13 @@ def handleTwitter(appID, filename, toks, line, cursor):
                 if res != -1 and res != None:
                     print "Success twitter: " + str(res)
                     backend.updateKeyType(res, 'Twitter', cursor)
-                '''
+                elif keyval.startswith('getString('):
+                    backend.saveKey(appID, filename, keyval, 'Twitter', None, c)
                 else:
-                    print "failed twitter: "
-                '''
+                    print "failed twitter: " + keyval
+                    print line.strip()
+                    print "----------------------------"
+                
 
 def handleDropbox(appID, filename, toks, line, cursor):
     #print line.strip()
@@ -282,7 +288,7 @@ if(resumeProgressFromLog):
     
 #for each directory in the input directory
 for d in os.walk( os.path.join(args.directory,'.')).next()[1]:
-    print "dir " + os.path.join(args.directory,d)
+    #print "dir " + os.path.join(args.directory,d)
     processApp(os.path.join(args.directory,d), dictionary, max_len, c)
 
 backend.close()
