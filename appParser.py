@@ -115,15 +115,16 @@ def handleTwitter(appID, filename, toks, line, cursor):
                 elif keyval.startswith('getString('):
                     backend.saveKey(appID, filename, keyval, 'Twitter', None, c)
                 else:
-                    print "failed twitter: " + keyval
-                    print line.strip()
-                    print "----------------------------"
-                    lf = open("./missedLines.txt", 'a')
-                    lf.write("------------------------------------------------------------"+ "\n")
-                    lf.write("Missed Twitter call. App id: "+ str(appID) + " file: " + filename+ "\n")
-                    lf.write(line.strip()+ "\n")
-                    lf.write("------------------------------------------------------------"+ "\n")
-                    lf.close()
+                    if not 'twitter4j' in filename: #some apps were adding the library as source code. This omits those files.
+                        print "failed twitter: " + keyval
+                        print line.strip()
+                        print "----------------------------"
+                        lf = open("./missedLines.txt", 'a')
+                        lf.write("------------------------------------------------------------"+ "\n")
+                        lf.write("Missed Twitter call. App id: "+ str(appID) + " file: " + filename+ "\n")
+                        lf.write(line.strip()+ "\n")
+                        lf.write("------------------------------------------------------------"+ "\n")
+                        lf.close()
                 
 
 def handleDropbox(appID, filename, toks, line, cursor):
@@ -203,7 +204,7 @@ def processJavaFile(filename, appID, dictionary, max_len, c):
                                 if 'twitter' in varname:
                                     #print "FOUND DROPBOX!"
                                     keyType = "Twitter"
-                                if val.startswith('AKIA'):
+                                if val.startswith('AKIA') or val.startswith('akia'):
                                     keyType = "AWS"                                    
                                 #print "Creating new key: " + str(val)
                                 backend.saveKey(appID, filename, varname, keyType, val, c)
