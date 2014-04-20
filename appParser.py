@@ -89,17 +89,18 @@ def handleTwitter(appID, filename, toks, line, cursor):
                 elif keyval.startswith('getString('):
                     backend.saveKey(appID, filename, keyval, 'Twitter', None, c)
                 else:
-                    print "failed twitter: " + keyval
-                    print line.strip()
-                    print "----------------------------"
-                    lf = open("./missedLines.txt", 'a')
-                    lf.write("------------------------------------------------------------\n")
-                    lf.write("Missed Twitter call. App id: "+ str(appID) + " file: " + filename + "\n")
-                    lf.write(line.strip()+ "\n")
-                    lf.write("------------------------------------------------------------"+ "\n")
-                    lf.close()
+                    if not 'twitter4j' in filename: #some apps were adding the library as source code. This omits those files.
+                        print "failed twitter: " + keyval
+                        print line.strip()
+                        print "----------------------------"
+                        lf = open("./missedLines.txt", 'a')
+                        lf.write("------------------------------------------------------------\n")
+                        lf.write("Missed Twitter call. App id: "+ str(appID) + " file: " + filename + "\n")
+                        lf.write(line.strip()+ "\n")
+                        lf.write("------------------------------------------------------------"+ "\n")
+                        lf.close()
                 
-    if 'setOAuthConsumerSecret' in line and len(paramList)>= 1:
+    if 'setOAuthConsumerSecret' in line and not line.strip().startswith('//') and len(paramList)>= 1:
         keyval = paramList[0]
         if keyval.strip().startswith('"'):
             backend.saveKey(appID, filename, None, 'Twitter', keyval, c)
@@ -198,8 +199,12 @@ def processJavaFile(filename, appID, dictionary, max_len, c):
                                     keyType = "Facebook"
                                 if varname == 'dropbox_app_secret':
                                     #print "FOUND DROPBOX!"
-                                    keyType = "Dropbox"                     
-                                    
+                                    keyType = "Dropbox"
+                                if 'twitter' in varname:
+                                    #print "FOUND DROPBOX!"
+                                    keyType = "Twitter"
+                                if val.startswith('AKIA'):
+                                    keyType = "AWS"                                    
                                 #print "Creating new key: " + str(val)
                                 backend.saveKey(appID, filename, varname, keyType, val, c)
             if doHTTPAnalysis:
@@ -315,6 +320,7 @@ if(resumeProgressFromLog):
 for d in os.walk( os.path.join(args.directory,'.')).next()[1]:
     print "dir " + os.path.join(args.directory,d)
     processApp(os.path.join(args.directory,d), dictionary, max_len, c)
+    backend.commit();
 
 backend.close()
 

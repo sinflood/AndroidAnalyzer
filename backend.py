@@ -14,7 +14,7 @@ def getDB(path):
    #get MySQL connectionsaveKe
     global conn
     #User and password for MySQL
-    conn = mysql.connector.connect(user='root', password='craig')
+    conn = mysql.connector.connect(user='root', password='')
     c = conn.cursor()
 
     createDB(c)
@@ -154,7 +154,14 @@ def saveLibrary(appID, filename, library, cursor):
     if debug:
         print library
     cursor.execute("INSERT INTO apps.libraries(appID, filename, library) VALUES(%s, %s, %s)", [appID, filename, library] )
-            
+
+'''
+Cleans up and commits any dirty database data.
+'''
+def commit():
+    global conn
+    if conn != None:
+        conn.commit()            
 '''
 Cleans up and commits any dirty database data.
 '''
