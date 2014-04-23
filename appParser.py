@@ -31,6 +31,7 @@ def processApp(path, dictionary, max_len, c):
     #for each file in directory(recursive)
     shortFileNames = 0
     longFileNames = 0
+    alphabeticalFileNameBuckets = [0]*26
     for root, dirs, files in os.walk(path):
         for f in sorted(files):
             if f.endswith('.java'):
@@ -52,10 +53,20 @@ def processApp(path, dictionary, max_len, c):
                     lf.close()
                 if len(f.split('.')[0]) == 1:
                     shortFileNames += 1
+                    alphaIndex = ord(f.split('.')[0]) - ord('a')
+                    if alphaIndex >= 0 and alphaIndex < 26:
+                        alphabeticalFileNameBuckets[alphaIndex] = 1
                 else:
                     longFileNames += 1
+    # concluded walk through all source code
+    shortAlphabeticalFileNames = 0
+    for x in range(0, 25):
+        val = alphabeticalFileNameBuckets[x]
+        if val == 0:
+            break;
+        shortAlphabeticalFileNames += val
     try:
-        backend.saveFileNameLengths(appID, c, shortFileNames, longFileNames)
+        backend.saveFileNameLengths(appID, c, shortFileNames, longFileNames, shortAlphabeticalFileNames)
     except:
         traceback.print_exc(file=sys.stdout)
 

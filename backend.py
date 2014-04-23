@@ -36,6 +36,7 @@ def createDB(cursor):
 	`appname` TEXT NULL,
     `shortFileNames` INT(11) NULL,
     `longFileNames` INT(11)NULL,
+    `shortAlphaFileNameCount` INT(11)NULL,
 	PRIMARY KEY (`id`)
     );
 	''')
@@ -144,8 +145,8 @@ def saveApp(package, appName, cursor, shortFileNames, longFileNames):
 '''
 Updates app information with filename length counts
 '''
-def saveFileNameLengths(appID, cursor, shortFileNames, longFileNames):
-    cursor.execute("UPDATE apps.app SET shortFileNames = %s, longFileNames = %s WHERE id = %s", [shortFileNames, longFileNames, appID])
+def saveFileNameLengths(appID, cursor, shortFileNames, longFileNames, shortAlphaFileNameCount):
+    cursor.execute("UPDATE apps.app SET shortFileNames = %s, longFileNames = %s, shortAlphaFileNameCount = %s WHERE id = %s", [shortFileNames, longFileNames, shortAlphaFileNameCount, appID])
     if cursor.lastrowid != None:
             return cursor.lastrowid
     else:
