@@ -55,11 +55,12 @@ def processApp(path, dictionary, max_len, c):
                     lf = open(logFile, 'w')
                     lf.write(os.path.join(root, f))
                     lf.close()
-                if len(f.split('.')[0]) == 1:
+                if len(f.split('.')[0]) <= 2:
                     shortFileNames += 1
-                    alphaIndex = ord(f.split('.')[0]) - ord('a')
-                    if alphaIndex >= 0 and alphaIndex < 26:
-                        alphabeticalFileNameBuckets[alphaIndex] = 1
+                    if len(f.split('.')[0]) == 1:
+                        alphaIndex = ord(f.split('.')[0]) - ord('a')
+                        if alphaIndex >= 0 and alphaIndex < 26:
+                            alphabeticalFileNameBuckets[alphaIndex] = 1
                 else:
                     longFileNames += 1
     # concluded walk through all source code
@@ -80,9 +81,6 @@ def processApp(path, dictionary, max_len, c):
     packageNameAsRelativePath = packageName.replace('.', '/') # assumes forward slash as directory
     fullPackageNamePath = path + '/src/' + packageNameAsRelativePath + '/a.java'
     isADotJavaInPackageNameDirectory =  os.path.isfile(fullPackageNamePath)
-    print fullPackageNamePath
-    if isADotJavaInPackageNameDirectory:
-        print isADotJavaInPackageNameDirectory
 
     try:
         backend.saveFileNameLengths(appID, c, shortFileNames, longFileNames, shortAlphabeticalFileNamesContiguous, shortAlphaFileNameCount, containsADotJava, isADotJavaInPackageNameDirectory)
