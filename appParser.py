@@ -59,14 +59,19 @@ def processApp(path, dictionary, max_len, c):
                 else:
                     longFileNames += 1
     # concluded walk through all source code
-    shortAlphabeticalFileNames = 0
+    shortAlphabeticalFileNamesContiguous = 0
+    shortAlphaFileNameCount = 0
+    keepCountingContiguous = True
     for x in range(0, 25):
         val = alphabeticalFileNameBuckets[x]
-        if val == 0:
-            break;
-        shortAlphabeticalFileNames += val
+        shortAlphaFileNameCount += val
+        
+        if val == 0 and keepCountingContiguous:
+            keepCountingContiguous = False
+        if keepCountingContiguous:
+            shortAlphabeticalFileNamesContiguous += val
     try:
-        backend.saveFileNameLengths(appID, c, shortFileNames, longFileNames, shortAlphabeticalFileNames)
+        backend.saveFileNameLengths(appID, c, shortFileNames, longFileNames, shortAlphabeticalFileNamesContiguous, shortAlphaFileNameCount)
     except:
         traceback.print_exc(file=sys.stdout)
 
