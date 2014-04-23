@@ -14,7 +14,7 @@ def getDB(path):
    #get MySQL connectionsaveKe
     global conn
     #User and password for MySQL
-    conn = mysql.connector.connect(user='root', password='craig', buffered=True)
+    conn = mysql.connector.connect(user='root', password='', buffered=True)
     c = conn.cursor()
 
     createDB(c)
@@ -38,6 +38,7 @@ def createDB(cursor):
     `longFileNames` INT(11)NULL,
     `shortAlphaFileNameCountContig` INT(11)NULL,
     `shortAlphaFileNameCount` INT(11)NULL,
+    `containsADotJava` INT(11)NULL,
 	PRIMARY KEY (`id`)
     );
 	''')
@@ -146,8 +147,8 @@ def saveApp(package, appName, cursor, shortFileNames, longFileNames):
 '''
 Updates app information with filename length counts
 '''
-def saveFileNameLengths(appID, cursor, shortFileNames, longFileNames, shortAlphaFileNameCountContig, shortAlphaFileNameCount):
-    cursor.execute("UPDATE apps.app SET shortFileNames = %s, longFileNames = %s, shortAlphaFileNameCountContig = %s, shortAlphaFileNameCount = %s WHERE id = %s", [shortFileNames, longFileNames, shortAlphaFileNameCountContig, shortAlphaFileNameCount, appID])
+def saveFileNameLengths(appID, cursor, shortFileNames, longFileNames, shortAlphaFileNameCountContig, shortAlphaFileNameCount, containsADotJava):
+    cursor.execute("UPDATE apps.app SET shortFileNames = %s, longFileNames = %s, shortAlphaFileNameCountContig = %s, shortAlphaFileNameCount = %s, containsADotJava = %s WHERE id = %s", [shortFileNames, longFileNames, shortAlphaFileNameCountContig, shortAlphaFileNameCount, containsADotJava, appID])
     if cursor.lastrowid != None:
             return cursor.lastrowid
     else:

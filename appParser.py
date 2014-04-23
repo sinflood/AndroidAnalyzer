@@ -27,7 +27,11 @@ def processApp(path, dictionary, max_len, c):
     global resumeProgressFromLog
     global saveProgressToLog
     
-    appID = backend.saveApp('something', path, c, 0, 0) #TODO: fix package name
+    # derive package name from PlayDrone formated directory title
+    tmpPath, packageNameWithNumber = os.path.split(path)
+    packageName, playDroneNumber = packageNameWithNumber.split('-')
+
+    appID = backend.saveApp(packageName, path, c, 0, 0) #TODO: fix package name
     #for each file in directory(recursive)
     shortFileNames = 0
     longFileNames = 0
@@ -70,8 +74,9 @@ def processApp(path, dictionary, max_len, c):
             keepCountingContiguous = False
         if keepCountingContiguous:
             shortAlphabeticalFileNamesContiguous += val
+    containsADotJava = alphabeticalFileNameBuckets[0]
     try:
-        backend.saveFileNameLengths(appID, c, shortFileNames, longFileNames, shortAlphabeticalFileNamesContiguous, shortAlphaFileNameCount)
+        backend.saveFileNameLengths(appID, c, shortFileNames, longFileNames, shortAlphabeticalFileNamesContiguous, shortAlphaFileNameCount, containsADotJava)
     except:
         traceback.print_exc(file=sys.stdout)
 
