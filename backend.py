@@ -39,6 +39,7 @@ def createDB(cursor):
     `shortAlphaFileNameCountContig` INT(11)NULL,
     `shortAlphaFileNameCount` INT(11)NULL,
     `containsADotJava` INT(11)NULL,
+    `isADotJavaInPackageNameDirectory` INT(11)NULL,
 	PRIMARY KEY (`id`)
     );
 	''')
@@ -147,8 +148,8 @@ def saveApp(package, appName, cursor, shortFileNames, longFileNames):
 '''
 Updates app information with filename length counts
 '''
-def saveFileNameLengths(appID, cursor, shortFileNames, longFileNames, shortAlphaFileNameCountContig, shortAlphaFileNameCount, containsADotJava):
-    cursor.execute("UPDATE apps.app SET shortFileNames = %s, longFileNames = %s, shortAlphaFileNameCountContig = %s, shortAlphaFileNameCount = %s, containsADotJava = %s WHERE id = %s", [shortFileNames, longFileNames, shortAlphaFileNameCountContig, shortAlphaFileNameCount, containsADotJava, appID])
+def saveFileNameLengths(appID, cursor, shortFileNames, longFileNames, shortAlphaFileNameCountContig, shortAlphaFileNameCount, containsADotJava, isADotJavaInPackageNameDirectory):
+    cursor.execute("UPDATE apps.app SET shortFileNames = %s, longFileNames = %s, shortAlphaFileNameCountContig = %s, shortAlphaFileNameCount = %s, containsADotJava = %s, isADotJavaInPackageNameDirectory = %s WHERE id = %s", [shortFileNames, longFileNames, shortAlphaFileNameCountContig, shortAlphaFileNameCount, containsADotJava, isADotJavaInPackageNameDirectory, appID])
     if cursor.lastrowid != None:
             return cursor.lastrowid
     else:

@@ -75,8 +75,17 @@ def processApp(path, dictionary, max_len, c):
         if keepCountingContiguous:
             shortAlphabeticalFileNamesContiguous += val
     containsADotJava = alphabeticalFileNameBuckets[0]
+
+    # check the package name directory for a.java
+    packageNameAsRelativePath = packageName.replace('.', '/') # assumes forward slash as directory
+    fullPackageNamePath = path + '/src/' + packageNameAsRelativePath + '/a.java'
+    isADotJavaInPackageNameDirectory =  os.path.isfile(fullPackageNamePath)
+    print fullPackageNamePath
+    if isADotJavaInPackageNameDirectory:
+        print isADotJavaInPackageNameDirectory
+
     try:
-        backend.saveFileNameLengths(appID, c, shortFileNames, longFileNames, shortAlphabeticalFileNamesContiguous, shortAlphaFileNameCount, containsADotJava)
+        backend.saveFileNameLengths(appID, c, shortFileNames, longFileNames, shortAlphabeticalFileNamesContiguous, shortAlphaFileNameCount, containsADotJava, isADotJavaInPackageNameDirectory)
     except:
         traceback.print_exc(file=sys.stdout)
 
