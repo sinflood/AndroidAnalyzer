@@ -5,7 +5,7 @@ from random import choice
 import backend
 
 doKeyAnalysis = True
-doHTTPAnalysis = True
+doHTTPAnalysis = False
 doTwitterAnalysis = True
 doDropboxAnalysis = True
 doLibraryImports = True
@@ -54,7 +54,10 @@ def processApp(path, dictionary, max_len, c):
                     shortFileNames += 1
                 else:
                     longFileNames += 1
-    backend.saveFileNameLengths(appID, c, shortFileNames, longFileNames)
+    try:
+        backend.saveFileNameLengths(appID, c, shortFileNames, longFileNames)
+    except:
+        traceback.print_exc(file=sys.stdout)
 
 def handleHttpGet(httpID, toks, line, cursor):
     pieces = line.split('=')
@@ -321,7 +324,10 @@ if(resumeProgressFromLog):
 for d in os.walk( os.path.join(args.directory,'.')).next()[1]:
     print "dir " + os.path.join(args.directory,d)
     processApp(os.path.join(args.directory,d), dictionary, max_len, c)
-    backend.commit();
+    try:
+        backend.commit()
+    except:
+        traceback.print_exc(file=sys.stdout)
 
 backend.close()
 

@@ -14,7 +14,7 @@ def getDB(path):
    #get MySQL connectionsaveKe
     global conn
     #User and password for MySQL
-    conn = mysql.connector.connect(user='root', password='')
+    conn = mysql.connector.connect(user='root', password='craig', buffered=True)
     c = conn.cursor()
 
     createDB(c)
@@ -94,7 +94,8 @@ def saveKey(appID, filename, keyID, keytype, value, cursor):
         #print calcEntropy(value, range_printable)
     else:
         cursor.execute("INSERT INTO apps.keys(appID, varName, value, keytype, filename) VALUES (%s, %s, %s, %s, %s)", [appID, keyID, value, keytype, filename])
-
+        return cursor.lastrowid
+    
 def getKey(variable, appID, cursor):
     if debug:
         print variable
@@ -111,7 +112,7 @@ def updateKeyType(keyID, keytype, cursor):
         print keytype
     else:
         cursor.execute("update apps.keys set keytype= '" + keytype + "' where id = " + str(keyID))
-        
+        return cursor.lastrowid
 '''
 Saves http data to the MySQL database
 '''
@@ -128,7 +129,7 @@ def saveHTTPParam(httpID, order, paramType, value, cursor):
         print value
     else:
         cursor.execute("INSERT INTO apps.httpParams(httpID, orderNum, type, value) VALUES (%s, %s, %s, %s)", [httpID, order, paramType, value])
-  
+        return cursor.lastrowid
 '''
 Saves app information to the MySQL database.
 Returns the database ID.
@@ -145,7 +146,10 @@ Updates app information with filename length counts
 '''
 def saveFileNameLengths(appID, cursor, shortFileNames, longFileNames):
     cursor.execute("UPDATE apps.app SET shortFileNames = %s, longFileNames = %s WHERE id = %s", [shortFileNames, longFileNames, appID])
-
+    if cursor.lastrowid != None:
+            return cursor.lastrowid
+    else:
+            return -1
             
 '''
 Saves library import to the database
@@ -154,7 +158,7 @@ def saveLibrary(appID, filename, library, cursor):
     if debug:
         print library
     cursor.execute("INSERT INTO apps.libraries(appID, filename, library) VALUES(%s, %s, %s)", [appID, filename, library] )
-
+    return cursor.lastrowid
 '''
 Cleans up and commits any dirty database data.
 '''
