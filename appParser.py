@@ -35,6 +35,7 @@ def processApp(path, dictionary, max_len, c):
     #for each file in directory(recursive)
     shortFileNames = 0
     longFileNames = 0
+    aDotJavaCount = 0
     alphabeticalFileNameBuckets = [0]*26
     for root, dirs, files in os.walk(path):
         for f in sorted(files):
@@ -58,9 +59,11 @@ def processApp(path, dictionary, max_len, c):
                 if len(f.split('.')[0]) <= 2:
                     shortFileNames += 1
                     if len(f.split('.')[0]) == 1:
-                        alphaIndex = ord(f.split('.')[0]) - ord('a')
+                        alphaIndex = ord((f.split('.')[0]).lower()) - ord('a')
                         if alphaIndex >= 0 and alphaIndex < 26:
                             alphabeticalFileNameBuckets[alphaIndex] = 1
+                        if (f.lower()).split('.')[0] == 'a':
+                            aDotJavaCount += 1
                 else:
                     longFileNames += 1
     # concluded walk through all source code
@@ -75,7 +78,6 @@ def processApp(path, dictionary, max_len, c):
             keepCountingContiguous = False
         if keepCountingContiguous:
             shortAlphabeticalFileNamesContiguous += val
-    containsADotJava = alphabeticalFileNameBuckets[0]
 
     # check the package name directory for a.java
     packageNameAsRelativePath = packageName.replace('.', '/') # assumes forward slash as directory
@@ -83,7 +85,7 @@ def processApp(path, dictionary, max_len, c):
     isADotJavaInPackageNameDirectory =  os.path.isfile(fullPackageNamePath)
 
     try:
-        backend.saveFileNameLengths(appID, c, shortFileNames, longFileNames, shortAlphabeticalFileNamesContiguous, shortAlphaFileNameCount, containsADotJava, isADotJavaInPackageNameDirectory)
+        backend.saveFileNameLengths(appID, c, shortFileNames, longFileNames, shortAlphabeticalFileNamesContiguous, shortAlphaFileNameCount, aDotJavaCount, isADotJavaInPackageNameDirectory)
     except:
         traceback.print_exc(file=sys.stdout)
 
