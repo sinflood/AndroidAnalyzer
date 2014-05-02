@@ -205,7 +205,10 @@ def processJavaFile(filename, appID, dictionary, max_len, c):
         for line in f:
             if "com.facebook" in line:
                 facebookUse = True
+                backend.saveLibrary(appID, filename, "Facebook", c)
                 #print "found facebook use"
+            if "com.amazonaws" in line:
+                backend.saveLibrary(appID, filename, "AWS", c)
             toks = line.lower().strip().split()
             #print line.strip()
             if doKeyAnalysis:
@@ -258,6 +261,7 @@ def processJavaFile(filename, appID, dictionary, max_len, c):
                     backend.saveHTTP(appID, filename, 'https', line, c)
             if doTwitterAnalysis:
                 if 'setOAuthConsumer' in line:
+                    backend.saveLibrary(appID, filename, "Twitter", c)
                     #get second param of call
                     #if constant, then add to keys
                     #if var, try to lookup in keys
@@ -267,6 +271,7 @@ def processJavaFile(filename, appID, dictionary, max_len, c):
                     handleTwitter(appID, filename, toks, line, c)
             if doDropboxAnalysis:
                 if "new AppKeyPair("  in line:
+                    backend.saveLibrary(appID, filename, "Dropbox", c)
                     #get second param of call
                     #if constant, then add to keys
                     #if var, try to lookup in keys
