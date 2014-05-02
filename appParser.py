@@ -70,7 +70,7 @@ def processApp(path, dictionary, max_len, c):
     shortAlphabeticalFileNamesContiguous = 0
     shortAlphaFileNameCount = 0
     keepCountingContiguous = True
-    for x in range(0, 25):
+    for x in range(0, 26):
         val = alphabeticalFileNameBuckets[x]
         shortAlphaFileNameCount += val
         
