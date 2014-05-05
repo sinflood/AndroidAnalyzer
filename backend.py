@@ -14,7 +14,7 @@ def getDB(path):
    #get MySQL connectionsaveKe
     global conn
     #User and password for MySQL
-    conn = mysql.connector.connect(user='root', password='', buffered=True)
+    conn = mysql.connector.connect(user='root', password='craig', buffered=True)
     c = conn.cursor()
 
     createDB(c)

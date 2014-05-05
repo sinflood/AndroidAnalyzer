@@ -26,11 +26,14 @@ def processApp(path, dictionary, max_len, c):
     global resumeFlag
     global resumeProgressFromLog
     global saveProgressToLog
+
     
     # derive package name from PlayDrone formated directory title
     tmpPath, packageNameWithNumber = os.path.split(path)
-    packageName, playDroneNumber = packageNameWithNumber.split('-')
-
+    if packageNameWithNumber != None and len(packageNameWithNumber.split('-')) > 1:
+        packageName, playDroneNumber = packageNameWithNumber.split('-')
+    else:
+        packageName = path
     appID = backend.saveApp(packageName, path, c, 0, 0) #TODO: fix package name
     #for each file in directory(recursive)
     shortFileNames = 0
@@ -133,7 +136,7 @@ def handleTwitter(appID, filename, toks, line, cursor):
                         lf.write("------------------------------------------------------------"+ "\n")
                         lf.close()
                 
-    if 'setOAuthConsumerSecret' in line and not line.strip().startswith('//') and len(paramList)>= 1:
+    elif 'setOAuthConsumerSecret' in line and not line.strip().startswith('//') and len(paramList)>= 1:
         keyval = paramList[0]
         if keyval.strip().startswith('"'):
             backend.saveKey(appID, filename, None, 'Twitter', keyval, c)
@@ -211,6 +214,10 @@ def processJavaFile(filename, appID, dictionary, max_len, c):
                 #print "found facebook use"
             if "com.amazonaws" in line:
                 backend.saveLibrary(appID, filename, "AWS", c)
+            if "com.dropbox" in line:
+                backend.saveLibrary(appID, filename, "Dropbox", c)
+            if "com.twitter4j" in line:
+                backend.saveLibrary(appID, filename, "Dropbox", c)
             toks = line.lower().strip().split()
             #print line.strip()
             if doKeyAnalysis:
@@ -237,9 +244,11 @@ def processJavaFile(filename, appID, dictionary, max_len, c):
                                 if varname == 'dropbox_app_secret':
                                     #print "FOUND DROPBOX!"
                                     keyType = "Dropbox"
-                                if 'twitter' in varname:
-                                    #print "FOUND DROPBOX!"
-                                    keyType = "Twitter"
+                                    backend.saveLibrary(appID, filename, "Dropbox", c)
+                                #if 'twitter' in varname:
+                                #    #print "FOUND DROPBOX!"
+                                #    keyType = "Twitter"
+                                #    backend.saveLibrary(appID, filename, "Twitter", c)
                                 if val.startswith('AKIA') or val.startswith('akia'):
                                     keyType = "AWS"                                    
                                 #print "Creating new key: " + str(val)
@@ -264,22 +273,10 @@ def processJavaFile(filename, appID, dictionary, max_len, c):
             if doTwitterAnalysis:
                 if 'setOAuthConsumer' in line:
                     backend.saveLibrary(appID, filename, "Twitter", c)
-                    #get second param of call
-                    #if constant, then add to keys
-                    #if var, try to lookup in keys
-                        #if found, update keys with type twitter
-                    #if not found, create new key entry with just var name and type (no value)
-                    #print 'found twitter!'
                     handleTwitter(appID, filename, toks, line, c)
             if doDropboxAnalysis:
                 if "new AppKeyPair("  in line:
                     backend.saveLibrary(appID, filename, "Dropbox", c)
-                    #get second param of call
-                    #if constant, then add to keys
-                    #if var, try to lookup in keys
-                        #if found, update keys with type twitter
-                    #if not found, create new key entry with just var name and type (no value)
-                    #print 'found twitter!'
                     handleDropbox(appID, filename, toks, line, c) 
             
             if doLibraryImports:
