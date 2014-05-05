@@ -8,6 +8,7 @@ doKeyAnalysis = True
 doHTTPAnalysis = False
 doTwitterAnalysis = True
 doDropboxAnalysis = True
+doAWSAnalysis = False
 doLibraryImports = True
 
 saveProgressToLog = False
@@ -199,6 +200,44 @@ def handleDropbox(appID, filename, toks, line, cursor):
         lf.write("------------------------------------------------------------"+ "\n")
         lf.close()
 
+
+
+def handleAWS(appID, filename, toks, line, cursor):
+    #print line.strip()
+    params = '('.join(line.split('(')[1:]).strip()[:-2]
+    paramList = params.split(',')
+    if len(paramList) >=2:
+        keyval = paramList[1]
+        if keyval.strip().startswith('"'):
+            #print "found key: " + keyval
+            keyval = keyval.strip().strip(')').strip('"')
+            backend.saveKey(appID, filename, None, 'AWS', keyval, c)
+        else: #we have a variable. Check to see if we have seen it before.
+            if not 'String ' in keyval: #make sure this isn't a method declaration
+                #print "Keyval: " + keyval
+                endpiece = keyval.split('.')[-1]
+                res = backend.getKey(endpiece, appID, c)
+                if res != -1 and res != None:
+                    #print "Success Dropbox: " + str(res)
+                    backend.updateKeyType(res, 'AWS', cursor)
+                
+                else:
+                    print "failed AWS: "
+                    lf = open("./missedLines.txt", 'a')
+                    lf.write("------------------------------------------------------------"+ "\n")
+                    lf.write("Missed AWS call. App id: "+ str(appID) + " file: " + filename+ "\n")
+                    lf.write(line.strip()+ "\n")
+                    lf.write("------------------------------------------------------------"+ "\n")
+                    lf.close()
+    else:
+        print "failed AWS: "
+        lf = open("./missedLines.txt", 'a')
+        lf.write("------------------------------------------------------------"+ "\n")
+        lf.write("Missed AWS call. App id: "+ str(appID) + " file: " + filename+ "\n")
+        lf.write(line.strip()+ "\n")
+        lf.write("------------------------------------------------------------"+ "\n")
+        lf.close()
+
 '''                
 Pull out features from a single Java file and save to database.
 '''
@@ -217,7 +256,7 @@ def processJavaFile(filename, appID, dictionary, max_len, c):
             if "com.dropbox" in line:
                 backend.saveLibrary(appID, filename, "Dropbox", c)
             if "com.twitter4j" in line:
-                backend.saveLibrary(appID, filename, "Dropbox", c)
+                backend.saveLibrary(appID, filename, "Twitter", c)
             toks = line.lower().strip().split()
             #print line.strip()
             if doKeyAnalysis:
@@ -238,7 +277,7 @@ def processJavaFile(filename, appID, dictionary, max_len, c):
                                 #print "FOUND KEY!!!!\n" + line
                                 #if calcEntropy(valspl[1].strip().strip('"'), range_printable) > 2.5:
                                 keyType = None
-                                if facebookUse or varname == "fb_app_signature":
+                                if facebookUse and varname != "fb_app_signature" and "id" not in varname:
                                     #print "found facebook key"
                                     keyType = "Facebook"
                                 if varname == 'dropbox_app_secret':
@@ -277,7 +316,12 @@ def processJavaFile(filename, appID, dictionary, max_len, c):
             if doDropboxAnalysis:
                 if "new AppKeyPair("  in line:
                     backend.saveLibrary(appID, filename, "Dropbox", c)
-                    handleDropbox(appID, filename, toks, line, c) 
+                    handleDropbox(appID, filename, toks, line, c)
+            if doAWSAnalysis:
+                if "new BasicAWSCredentials(" in line:
+                    backend.saveLibrary(appID, filename, "AWS", c)
+                    handleAWS(appID, filename, toks, line, c)
+
             
             if doLibraryImports:
                 if len(toks) >= 2:
